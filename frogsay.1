@@ -1,0 +1,204 @@
+'\" t
+.\"     Title: frogsay
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 03/31/2022
+.\"    Manual: Frogsay Manual
+.\"    Source: Frogsay 1.0.0
+.\"  Language: English
+.\"
+.TH "FROGSAY" "1" "03/31/2022" "Frogsay 1\&.0\&.0" "Frogsay Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+frogsay, frogthink \- configurable speaking/thinking frog (and a bit more)
+.SH "SYNOPSIS"
+.sp
+\fBfrogsay\fR [\fB\-c\fR \fIchain_string\fR] [\fB\-e\fR \fIeye_string\fR] [\fB\-f\fR \fIfrogfile\fR | \fB\-r\fR [\fB\-C\fR] ] [\fB\-h\fR] [\fB\-l\fR] [\fB\-m\fR \fImouth_string\fR] [\fB\-n\fR] [\fB\-p\fR \fIpreset_string\fR] [\fB\-W\fR \fIcolumn\fR] [<message>]
+.SH "DESCRIPTION"
+.sp
+\fIFrogsay\fR generates an ASCII picture of a frog saying something provided by the user\&. If run with no arguments, it accepts standard input, word\-wraps the message given at about 40 columns, and prints the frog saying the given message on standard output\&.
+.sp
+To aid in the use of arbitrary messages with arbitrary whitespace, use the \fB\-n\fR option\&. If it is specified, the given message will not be word\-wrapped\&. This is possibly useful if you want to make the frog think or speak in figlet(6)\&. If \fB\-n\fR is specified, there must not be any command line arguments left after all the switches have been processed\&.
+.sp
+The \fB\-W\fR specifies roughly where the message should be wrapped\&. The default is equivalent to \fB\-W 40\fR (i\&.e\&. wrap words at or before the 40th column)\&.
+.sp
+If any command\-line arguments are left over after all switches have been processed, they become the frog\(cqs message\&. The program will not accept standard input for a message in this case\&.
+.sp
+If the program is invoked as \fBfrogthink\fR then the frog will think its message instead of saying it\&.
+.SH "OPTIONS"
+.PP
+\fB\-e\fR
+.RS 4
+Selects the appearance of the frog\(cqs eyes, in which case the first two characters of the argument string
+\fIeye_string\fR
+will be used\&. The two characters are applied to the left and right eye, respectively\&. If only one character is supplied, it is applied to both eyes\&. Any configuration done by
+\fB\-e\fR,
+\fB\-c\fR, or
+\fB\-m\fR
+will be lost if one of the provided preset faces is used\&.
+.RE
+.PP
+\fB\-m\fR
+.RS 4
+The mouth is similarly configurable through
+\fB\-m\fR
+and
+\fImouth_string\fR; it is one character\&. Any configuration done by
+\fB\-e\fR,
+\fB\-c\fR, or
+\fB\-m\fR
+will be lost if one of the provided preset faces is used\&.
+.RE
+.PP
+\fB\-c\fR
+.RS 4
+Adds a necklace to the frog\&. The ornament displayed is the first character of the string
+\fIchain_string\fR
+passed\&. Any configuration done by
+\fB\-e\fR,
+\fB\-c\fR, or
+\fB\-m\fR
+will be lost if one of the provided preset faces is used\&.
+.RE
+.PP
+\fB\-f\fR
+.RS 4
+Specifies a particular frog picture file (\fIfrogfile\fR) to use\&. If the frogfile spec resolves to an existing file, then it will be interpreted as a path to the frogfile\&. Otherwise, frogsay will search the FROGPATH for a frogfile with that name\&. Additional frogpath entries may be specified in the
+\fBFROGPATH\fR
+environment variable\&. To list all frogfiles on the current
+\fBFROGPATH\fR, invoke
+\fBfrogsay\fR
+with the
+\fB\-l\fR
+switch\&.
+.RE
+.PP
+\fB\-p\fR
+.RS 4
+There are several provided modes which change the appearance of the frog depending on its particular emotional/physical state\&. Invoke frogsay with the
+\fB\-p <preset>\fR
+flag and pass one of the following presets:
+.PP
+\fBasleep\fR
+.RS 4
+The frog is asleep, yet it still talks and thinks\&.
+.RE
+.PP
+\fBbling\fR
+.RS 4
+Invokes bling mode\&.
+.RE
+.PP
+\fBborg\fR
+.RS 4
+Invokes Borg mode\&.
+.RE
+.PP
+\fBchamp\fR
+.RS 4
+This frog is a winner\&.
+.RE
+.PP
+\fBdead\fR
+.RS 4
+Causes the frog to appear dead\&.
+.RE
+.PP
+\fBgreedy\fR
+.RS 4
+Invokes greedy mode\&.
+.RE
+.PP
+\fBhappy\fR
+.RS 4
+Brings on the frog\(cqs inner joy\&.
+.RE
+.PP
+\fBparanoid\fR
+.RS 4
+Causes a state of paranoia to come over the frog\&.
+.RE
+.PP
+\fBstoned\fR
+.RS 4
+Makes the frog appear thoroughly stoned\&.
+.RE
+.PP
+\fBtired\fR
+.RS 4
+Yields a tired frog\&.
+.RE
+.PP
+\fBwired\fR
+.RS 4
+This frog isn\(cqt tired at all\&.
+.RE
+.RE
+.PP
+\fB\-r\fR
+.RS 4
+Chooses a random frog from the frogs on the
+\fBFROGPATH\fR\&.
+.RE
+.PP
+\fB\-C\fR
+.RS 4
+Enables true\-color (24\-bit) frogs\&. Currently only has an effect when used in conjunction with
+\fB\-r\fR\&.
+.RE
+.PP
+\fB\-l\fR
+.RS 4
+Lists the defined frogs on the current
+\fBFROGPATH\fR\&. Displays it in a human\-readable pretty\-printed format when displaying to a terminal device\&. When sent to a non\-terminal device, outputs the list in a parsing\-friendly format with one frog name per line and no headers or blank lines\&.
+.RE
+.PP
+\fB\-h\fR
+.RS 4
+Displays a help screen\&.
+.RE
+.SH "FROGFILE FORMAT"
+.sp
+A frogfile is made up of a simple block of \fBperl(1)\fR code, which assigns a picture of a frog to the variable \fB$the_frog\fR\&. Should you wish to customize the eyes or the mouth of the frog, then the variables \fB$leye\fR, \fB$reye\fR, and \fB$mouth\fR may be used\&. The ornament applied via \fB\-c\fR corresponds to the \fB$chest\fR variable, and the left and right parts of the ornament chain correspond to \fB$lchain\fR and \fB$rchain\fR, respectively\&. The trail leading up to the frog\(cqs message balloon is composed of the character(s) in the \fB$thoughts\fR variable\&. Any backslashes must be reduplicated to prevent interpretation\&. Also, at\-signs ("@") must be backslashed because that is what Perl 5 expects\&. The name of a frogfile must end with \fB\&.frog\fR, otherwise it is not recognized as a frogfile\&.
+.SH "ENVIRONMENT"
+.sp
+The \fBFROGPATH\fR environment variable, if present, will be used to search for frogfiles\&. It contains a colon\-separated list of directories, much like \fBPATH\fR or \fBMANPATH\fR\&.
+.sp
+The default \fBFROGPATH\fR is searched after entries in the user\-specified \fBFROGPATH\fR environment variable\&. To suppress this behavior (e\&.g\&. for development work), set the \fBFROGSAY_ONLY_FROGPATH\fR environment variable to \fB1\fR\&. In this case, \fBFROGPATH\fR should contain at least a directory with a file called \fBdefault\&.frog\fR in it\&.
+.SH "FILES"
+.sp
+\fB%PREFIX%/share/frogsay/frogs\fR holds a sample set of frogfiles\&. Your \fBFROGPATH\fR automatically contains this directory, unless \fBFROGSAY_ONLY_FROGPATH\fR is set to \fB1\fR\&.
+.sp
+\fB%PREFIX%/share/frogsay/site\-frogs\fR is provided for administrators to install custom frogs\&. Frogs in \fBshare/frogsay/site\-frogs\fR take precedence over frogs with the same name in \fBshare/frogsay/frogs\fR\&. The \fBsite\-frogs\fR directory will never be modified by frogsay installations, so custom frogs defined there will persist across upgrades of frogsay\&. \fBsite\-frogs\fR is also on the default \fBFROGPATH\fR\&.
+.sp
+\fB%PREFIX%/etc/frogsay/frogpath\&.d/\fR (or \fB/etc/frogsay/frogpath\&.d/\fR when %PREFIX% is \fB/usr\fR) is a directory that contains files which list entries to be added to the default \fBFROGPATH\fR\&. This mechanism allows third\-party frog collections to register themselves with frogsay in a way that does not require per\-user configuration\&.
+.SH "BUGS"
+.sp
+If there are any, please report them on the frogsay GitHub page (https://github\&.com/sudorook/frogsay/issues) or notify the author at the address below\&.
+.SH "AUTHOR"
+.sp
+Frogsay is derived from cowsay, which is maintained by Andrew Janke (floss@apjanke\&.net) and was originally written by Tony Monroe (tony@nog\&.net), with suggestions from Shannon Appel (appel@csua\&.berkeley\&.edu) and contributions from Anthony Polito (aspolito@csua\&.berkeley\&.edu)\&.
+.SH "RESOURCES"
+.sp
+GitHub: https://github\&.com/sudorook/frogsay
+.SH "SEE ALSO"
+.sp
+\fBfortune(1)\fR, \fBperl(1)\fR, \fBwall(1)\fR, \fBnwrite(1)\fR, \fBfiglet(6)\fR

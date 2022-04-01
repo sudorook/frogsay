@@ -1,0 +1,138 @@
+FROGSAY(1)
+=========
+:doctype: manpage
+:man source: Frogsay
+:man version: 1.0.0
+:man manual: Frogsay Manual
+
+NAME
+----
+frogsay, frogthink - configurable speaking/thinking frog (and a bit more)
+
+SYNOPSIS
+--------
+*frogsay* 
+  [*-c* 'chain_string']
+  [*-e* 'eye_string']
+  [*-f* 'frogfile' | *-r* [*-C*] ]
+  [*-h*]
+  [*-l*]
+  [*-m* 'mouth_string']
+  [*-n*]
+  [*-p* 'preset_string']
+  [*-W* 'column']
+  [<message>]
+
+DESCRIPTION
+-----------
+_Frogsay_ generates an ASCII picture of a frog saying something provided by the user.  If run with no arguments, it accepts standard input, word-wraps the message given at about 40 columns, and prints the frog saying the given message on standard output.
+
+To aid in the use of arbitrary messages with arbitrary whitespace, use the *-n* option.  If it is specified, the given message will not be word-wrapped.  This is possibly useful if you want to make the frog think or speak in figlet(6).  If *-n* is specified, there must not be any command line arguments left after all the switches have been processed.
+
+The *-W* specifies roughly where the message should be wrapped. The default is equivalent to *-W 40* (i.e. wrap words at or before the 40th column).
+
+If any command-line arguments are left over after all switches have been processed, they become the frog's message. The program will not accept standard input for a message in this case.
+
+If the program is invoked as *frogthink* then the frog will think its message instead of saying it.
+
+OPTIONS
+-------
+
+*-e*::
+    Selects the appearance of the frog's eyes, in which case the first two characters of the argument string 'eye_string' will be used.  The two characters are applied to the left and right eye, respectively.  If only one character is supplied, it is applied to both eyes.  Any configuration done by *-e*, *-c*, or *-m* will be lost if one of the provided preset faces is used.
+
+*-m*::
+    The mouth is similarly configurable through *-m* and 'mouth_string'; it is one character.  Any configuration done by *-e*, *-c*, or *-m* will be lost if one of the provided preset faces is used.
+
+*-c*::
+    Adds a necklace to the frog.  The ornament displayed is the first character of the string 'chain_string' passed.  Any configuration done by *-e*, *-c*, or *-m* will be lost if one of the provided preset faces is used.
+
+*-f*::
+    Specifies a particular frog picture file ('frogfile') to use.  If the frogfile spec resolves to an existing file, then it will be interpreted as a path to the frogfile.  Otherwise, frogsay will search the FROGPATH for a frogfile with that name. Additional frogpath entries may be specified in the *FROGPATH* environment variable. To list all frogfiles on the current *FROGPATH*, invoke *frogsay* with the *-l* switch.
+
+*-p*::
+    There are several provided modes which change the appearance of the frog depending on its particular emotional/physical state.  Invoke frogsay with the *-p <preset>* flag and pass one of the following presets:
+
+    *asleep*::::
+        The frog is asleep, yet it still talks and thinks.
+
+    *bling*::::
+        Invokes bling mode.
+
+    *borg*::::
+        Invokes Borg mode.
+
+    *champ*::::
+        This frog is a winner.
+
+    *dead*::::
+        Causes the frog to appear dead.
+
+    *greedy*::::
+        Invokes greedy mode.
+
+    *happy*::::
+        Brings on the frog's inner joy.
+
+    *paranoid*::::
+        Causes a state of paranoia to come over the frog.
+
+    *stoned*::::
+        Makes the frog appear thoroughly stoned.
+
+    *tired*::::
+        Yields a tired frog.
+
+    *wired*::::
+        This frog isn't tired at all.
+
+*-r*::
+    Chooses a random frog from the frogs on the *FROGPATH*.
+
+*-C*::
+    Enables true-color (24-bit) frogs. Currently only has an effect when used in conjunction with *-r*.
+
+*-l*::
+    Lists the defined frogs on the current *FROGPATH*. Displays it in a human-readable pretty-printed format when displaying to a terminal device. When sent to a non-terminal device, outputs the list in a parsing-friendly format with one frog name per line and no headers or blank lines.
+
+*-h*::
+    Displays a help screen.
+
+FROGFILE FORMAT
+--------------
+A frogfile is made up of a simple block of *perl(1)* code, which assigns a picture of a frog to the variable *$the_frog*. Should you wish to customize the eyes or the mouth of the frog, then the variables *$leye*, *$reye*, and *$mouth* may be used.  The ornament applied via *-c* corresponds to the *$chest* variable, and the left and right parts of the ornament chain correspond to *$lchain* and *$rchain*, respectively.  The trail leading up to the frog's message balloon is composed of the character(s) in the *$thoughts* variable.  Any backslashes must be reduplicated to prevent interpretation.  Also, at-signs ("@") must be backslashed because that is what Perl 5 expects. The name of a frogfile must end with *.frog*, otherwise it is not recognized as a frogfile.  
+
+ENVIRONMENT
+-----------
+The *FROGPATH* environment variable, if present, will be used to search for frogfiles.  It contains a colon-separated list of directories, much like *PATH* or *MANPATH*.
+
+The default *FROGPATH* is searched after entries in the user-specified *FROGPATH* environment variable.  To suppress this behavior (e.g. for development work), set the *FROGSAY_ONLY_FROGPATH* environment variable to *1*. In this case, *FROGPATH* should contain at least a directory with a file called *default.frog* in it.
+
+FILES
+-----
+*%PREFIX%/share/frogsay/frogs* holds a sample set of frogfiles.  Your *FROGPATH* automatically contains this directory, unless *FROGSAY_ONLY_FROGPATH* is set to *1*.
+
+*%PREFIX%/share/frogsay/site-frogs* is provided for administrators to install custom frogs. Frogs in *share/frogsay/site-frogs* take precedence over frogs with the same name in *share/frogsay/frogs*. The *site-frogs* directory will never be modified by frogsay installations, so custom frogs defined there will persist across upgrades of frogsay. *site-frogs* is also on the default *FROGPATH*.
+
+*%PREFIX%/etc/frogsay/frogpath.d/* (or */etc/frogsay/frogpath.d/* when %PREFIX% is */usr*) is a directory that contains files which list entries to be added to the default *FROGPATH*. This mechanism allows third-party frog collections to register themselves with frogsay in a way that does not require per-user configuration.
+
+BUGS
+----
+If there are any, please report them on the frogsay GitHub page (https://github.com/sudorook/frogsay/issues) or notify the author at the address below.
+
+AUTHOR
+------
+
+Frogsay is derived from cowsay, which is maintained by Andrew Janke (floss@apjanke.net) and was originally written by Tony Monroe (tony@nog.net), with suggestions from Shannon Appel (appel@csua.berkeley.edu) and contributions from Anthony Polito (aspolito@csua.berkeley.edu).
+
+RESOURCES
+---------
+GitHub: <https://github.com/sudorook/frogsay>
+
+SEE ALSO
+--------
+*fortune(1)*, *perl(1)*, *wall(1)*, *nwrite(1)*, *figlet(6)*
+
+
+
+

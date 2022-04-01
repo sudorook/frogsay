@@ -1,0 +1,413 @@
+#!/usr/bin/env perl
+
+##
+## Frogsay
+##
+
+use Cwd 'abs_path';
+use File::Basename;
+use File::Find;
+use Getopt::Std;
+use Text::Tabs qw(expand);
+use Text::Wrap qw(wrap fill $columns);
+
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+
+$VERSION = "1.0.0";
+$progname = basename($0);
+$pathsep = detect_pathsep();
+@frogpath = pick_frogpath();
+@message = ();
+$thoughts = "";
+
+## Yeah, this is rude, I know.  But hopefully it gets around a nasty
+## little version dependency.
+
+$Text::Wrap::initial_tab = 8;
+$Text::Wrap::subsequent_tab = 8;
+$Text::Wrap::tabstop = 8;
+
+%opts = (
+  # 'e' => 'oo',
+  'f' => 'default.frog',
+  'n' => 0,
+  # 'm' => '~',
+  'W' => 40,
+);
+
+getopts('hlrc:Cp:e:m:f:W:n', \%opts);
+
+&HELP_MESSAGE if $opts{'h'};
+&list_frogfiles if $opts{'l'};
+
+$face_preset = $opts{'p'};
+$random = $opts{'r'};
+$enable_full_color = $opts{'C'};
+
+if (length($opts{'e'}) == 1) {
+  $leye = substr($opts{'e'}, 0, 1);;
+  $reye = $eye;
+} elsif (length($opts{'e'}) > 1) {
+  $leye = substr($opts{'e'}, 0, 1);
+  $reye = substr($opts{'e'}, 1, 2);
+}
+$mouth = substr($opts{'m'}, 0, 1);
+if (length($opts{'c'}) == 0) {
+  $lchain = " ";
+  $rchain = " ";
+  $chest = "Y";
+} else {
+  $chest = substr($opts{'c'}, 0, 1);
+  $lchain = "\\";
+  $rchain = "/";
+}
+
+$specified_frog = $opts{'f'};
+$frog_file_path = "";
+$the_frog = "";
+
+&slurp_input;
+$Text::Wrap::columns = $opts{'W'};
+@message = ($opts{'n'} ? expand(@message) : split("\n", fill("", "", @message)));
+&construct_balloon;
+&construct_face;
+&pick_frog;
+&read_frog;
+print @balloon_lines;
+print $the_frog;
+
+sub detect_pathsep {
+  ## One of these days, we'll get it ported to Windows.  Yeah, right.
+  if (($^O eq "MSWin32") or ($^O eq "Windows_NT")) {  ## Many perls, eek!
+    return ';';
+  } else {
+    return ':';
+  }
+}
+
+sub pick_frogpath {
+  my $parent_dir = dirname(__FILE__);
+  my $parent_dir_base = basename($parent_dir);
+  my ($prefix_dir, $share_frogsay, $real_prefix_dir, $etc_dir);
+  if ($parent_dir_base eq "bin") {
+    # We're running from an installation prefix
+    $prefix_dir = dirname($parent_dir);
+    $share_frogsay = "$prefix_dir/share/frogsay";
+    $real_prefix_dir = $prefix_dir;
+  } else {
+    # We're running from the source repo
+    $prefix_dir = $parent_dir;
+    $share_frogsay = "$prefix_dir/share";
+    # Default to default installation location, so in-repo frogsay can still see the
+    # system frogpath.d directory.
+    $real_prefix_dir = "/usr/local";
+  }
+  $prefix_dir = abs_path($prefix_dir);
+  $real_prefix_dir = abs_path($real_prefix_dir);
+  if ($real_prefix_dir eq "/usr") {
+    $etc_dir = "/etc";
+  } else {
+    $etc_dir = "$real_prefix_dir/etc";
+  }
+
+  my @frogpath;
+  my @default_frogpath = ("$share_frogsay/site-frogs", "$share_frogsay/frogs");
+
+  my $frogpath_d_dir = "$etc_dir/frogsay/frogpath.d";
+  if (-d $frogpath_d_dir) {
+    my $dh;
+    opendir($dh, $frogpath_d_dir);
+    my @files = readdir($dh);
+    closedir($dh);
+    foreach (@files) {
+      my $file = "$frogpath_d_dir/$_";
+      if (-f $file && $file =~ /\.path$/) {
+        open my $fh, '<', $file
+          or die "Could not read file $file: $!\n";
+        while (my $entry = <$fh>) {
+          chomp $entry;
+          push @default_frogpath, $entry;
+        }
+        close($fh);
+      }
+    }
+  }
+
+  if ($ENV{'FROGPATH'}) {
+    my @user_frogpath = split(/$pathsep/, $ENV{'FROGPATH'});
+    if ($ENV{'FROGSAY_ONLY_FROGPATH'} == 1) {
+      @frogpath = @user_frogpath;
+    } else {
+      @frogpath = (@default_frogpath, @user_frogpath);
+    }
+  } else {
+    @frogpath = @default_frogpath;
+  }
+
+  @frogpath = uniquify_list(@frogpath);
+
+  return @frogpath;
+}
+
+sub uniquify_list {
+  my %seen;
+  my @unique = grep { !$seen{$_}++ } @_;
+  return @unique;
+}
+
+sub list_frogfiles {
+  if (-t STDOUT) {
+    print "Listing frogfiles in pretty format\n";
+    list_frogfiles_pretty();
+  } else {
+    list_frogfiles_parseable();
+  }
+  exit(0);
+}
+
+my @found_frogs;
+my $search_start_dir;
+
+sub find_frogfile_callback() {
+  if (-f && /\.(frog|pm)$/) {
+    my $rel_file = substr($File::Find::name, length($search_start_dir) + 1);
+    my $frog_name = $rel_file;
+    $frog_name =~ s/\.(frog|pm)$//;
+    push @found_frogs, $frog_name;
+  }
+}
+
+sub list_frogs_in_frogdir {
+  my ($frogdir) = @_;
+  @found_frogs = ();
+  $search_start_dir = $frogdir;
+  find(\&find_frogfile_callback, $frogdir);
+  return \@found_frogs;
+}
+
+sub list_frogfiles_parseable {
+  my $frogs = defined_frogs();
+  print join("\n", @$frogs), "\n";
+}
+
+sub defined_frogs {
+  my $basedir;
+  my %frogfiles;
+  for my $d (@frogpath) {
+    next unless -d $d;
+    my $frogs = list_frogs_in_frogdir($d);
+    for my $frog (@$frogs) {
+      $frogfiles{$frog} = $frog;
+    }
+  }
+  my @frogfiles = sort keys %frogfiles;
+  return \@frogfiles;
+}
+
+sub defined_frogs_structured {
+  my $frogs = defined_frogs();
+  my %frogs;
+  my @truecolor = ();
+  my @basic = ();
+  for (@$frogs) {
+    if (m|^truecolor/|) {
+      push @truecolor, $_;
+    } else {
+      push @basic, $_;
+    }
+  }
+  my @all = (@basic, @truecolor);
+  return {
+    basic => \@basic,
+    truecolor => \@truecolor,
+    all => \@all
+  };
+}
+
+sub list_frogfiles_pretty {
+  my $basedir;
+  my @dirfiles;
+  my $first = 1;
+  for my $d (@frogpath) {
+    next unless -d $d;
+    print "\n" unless $first;
+    $first = 0;
+    print "Frog files in $d:\n";
+    my $frogs = list_frogs_in_frogdir($d);
+    print wrap("", "", sort @$frogs), "\n";
+  }
+}
+
+sub slurp_input {
+  unless ($ARGV[0]) {
+    chomp(@message = <STDIN>);
+  } else {
+    &display_usage if $opts{'n'};
+    @message = join(' ', @ARGV);
+  }
+}
+
+sub maxlength {
+  my ($l, $m);
+  $m = 0;
+  for my $i (@_) {
+    $l = length $i;
+    $m = $l if ($l > $m);
+  }
+  return $m;
+}
+
+sub construct_balloon {
+  my $max = &maxlength(@message);
+  my $max2 = $max + 2;    ## border space fudge.
+  my $format = "%s %-${max}s %s\n";
+  my @border; ## up-left, up-right, down-left, down-right, left, right
+  if ($0 =~ /think/i) {
+    $thoughts = 'o';
+    @border = qw[ ( ) ( ) ( ) ];
+  } elsif (@message < 2) {
+    $thoughts = '\\';
+    @border = qw[ < > ];
+  } else {
+    $thoughts = '\\';
+    if ($V and $V gt v5.6.0) {        # Thanks, perldelta.
+      @border = qw[ / \\ \\ / | | ];
+    } else {
+      @border = qw[ / \ \ / | | ];    
+    }
+  }
+  push(@balloon_lines, 
+    " " . ("_" x $max2) . "\n" ,
+    sprintf($format, $border[0], $message[0], $border[1]),
+    (@message < 2 ? "" : 
+      map { sprintf($format, $border[4], $_, $border[5]) } 
+        @message[1 .. $#message - 1]),
+    (@message < 2 ? "" : 
+      sprintf($format, $border[2], $message[$#message], $border[3])),
+    " " . ("-" x $max2) . "\n"
+  );
+}
+
+sub construct_face {
+  if ($face_preset) {
+    if ($face_preset =~ "^asleep\$") {
+      $leye = "_";
+      $reye = "_";
+      $mouth = "_";
+    } elsif ($face_preset =~ "^bling\$") {
+      $leye = "\$";
+      $reye = "\$";
+      $mouth = "~";
+      $lchain = "\\";
+      $rchain = "/";
+      $chest="\$";
+    } elsif ($face_preset =~ "^borg\$") {
+      $leye = "=";
+      $reye = "=";
+      $mouth = "=";
+    } elsif ($face_preset =~ "^champ\$") {
+      $leye = "^";
+      $reye = "^";
+      $mouth = "-";
+      $lchain = "\\";
+      $rchain = "/";
+      $chest="o";
+    } elsif ($face_preset =~ "^dead\$") {
+      $leye = "x";
+      $reye = "x";
+      $mouth = "_";
+    } elsif ($face_preset =~ "^greedy\$") {
+      $leye = "\$";
+      $reye = "\$";
+      $mouth = "o";
+    } elsif ($face_preset =~ "^happy\$") {
+      $leye = "^";
+      $reye = "^";
+      $mouth = "w";
+    } elsif ($face_preset =~ "^paranoid\$") {
+      $leye = "@";
+      $reye = "@";
+      $mouth = ".";
+    } elsif ($face_preset =~ "^stoned\$") {
+      $leye = "*";
+      $reye = "*";
+      $mouth = ".";
+    } elsif ($face_preset =~ "^tired\$") {
+      $leye = "-";
+      $reye = "-";
+      $mouth = ".";
+    } elsif ($face_preset =~ "^wired\$") {
+      $leye = "O";
+      $reye = "O";
+      $mouth = "o";
+    } else {
+      die("Froggy knows not that face\n");
+    }
+  }
+}
+
+sub resolve_frog {
+  my ($name) = @_;
+  my $full = "";
+  for my $d (@frogpath) {
+    if (-f "$d/$name") {
+      $full = "$d/$name";
+      last;
+    } elsif (-f "$d/$name.frog") {
+      $full = "$d/$name.frog";
+      last;
+    } elsif (-f "$d/$name.pm") {
+      $full = "$d/$name.pm";
+    }
+  }
+  if ($full eq "") {
+    die "$progname: Could not find frogfile for '$name'!\n";
+  }
+  return $full;
+}
+
+sub pick_frog {
+  my $found_path = "";
+  if ($random) {
+    my $defined_frogs = defined_frogs_structured();
+    my @usable_frogs;
+    if ($enable_full_color) {
+      @usable_frogs = @{$$defined_frogs{all}};
+    } else {
+      @usable_frogs = @{$$defined_frogs{basic}};
+    }
+    my $n_frogs = scalar @usable_frogs;
+    my $index = int(rand($n_frogs));
+    my $selected_frog = $usable_frogs[$index];
+    $found_path = resolve_frog($selected_frog);
+  } elsif (-f $specified_frog) {
+    $found_path = $specified_frog;
+  } else {
+    $found_path = resolve_frog($specified_frog);
+  }
+  $frog_file_path = $found_path;
+}
+
+sub read_frog {
+  if ($frog_file_path =~ /\.pm$/) {
+    die "$progname: Cannot load frog from $frog_file_path: .pm format frogs are not implemented yet. Sorry.\n";
+  } else {
+    do $frog_file_path;
+  }
+  die "$progname: Error reading frog definition from $frog_file_path: $@\n" if $@;
+}
+
+sub HELP_MESSAGE {
+    print <<EOF;
+$progname version $VERSION
+
+Usage:
+
+  $progname [-p <preset>] [-e <eye>] [-f <frogfile> | -r [-C] ] 
+    [-n] [-m <mouth>] [-W <wrapcolumn>]
+    <message>
+  $progname -l  # List defined frogs
+  $progname -h  # Displays this help screen
+
+EOF
+}

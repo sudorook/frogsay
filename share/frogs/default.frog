@@ -1,0 +1,15 @@
+if(!$leye){$leye = 'o';}
+if(!$reye){$reye = 'o';}
+if(!$mouth){$mouth = '~';}
+if(!$lchain){$lchain = ' ';}
+if(!$rchain){$rchain = ' ';}
+if(!$chest){$chest = 'Y';}
+$the_frog = <<EOF;
+  $thoughts ($leye) ($reye)
+   $thoughts  \\_/
+     ( $mouth )
+     /$lchain $rchain\\
+    /  $chest  \\
+   ( ) | ( )
+    " " " "
+EOF
