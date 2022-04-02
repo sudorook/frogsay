@@ -46,7 +46,7 @@ $enable_full_color = $opts{'C'};
 
 if (length($opts{'e'}) == 1) {
   $leye = substr($opts{'e'}, 0, 1);;
-  $reye = $eye;
+  $reye = $leye;
 } elsif (length($opts{'e'}) > 1) {
   $leye = substr($opts{'e'}, 0, 1);
   $reye = substr($opts{'e'}, 1, 2);
