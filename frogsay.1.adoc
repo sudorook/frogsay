@@ -2,7 +2,7 @@ FROGSAY(1)
 =========
 :doctype: manpage
 :man source: Frogsay
-:man version: 1.0.0
+:man version: 1.0.1
 :man manual: Frogsay Manual
 
 NAME
