@@ -1,0 +1,11 @@
+if(!$leye){$leye = 'o';}
+if(!$reye){$reye = 'o';}
+if(!$mouth){$mouth = '~';}
+$the_frog = <<EOF;
+  $thoughts ($leye) ($reye)
+   $thoughts  \\_/
+     ( $mouth )
+     / v \\
+    ( )|( )
+     "" ""
+EOF
