@@ -1,8 +1,8 @@
 # frogsay
 
-Like cowsay but with a frog. 
+Like cowsay but with a frog.
 
-```
+```text
   (o) (o)
     \_/
    ( ~ )
@@ -20,12 +20,13 @@ Forked from [cowsay](https://github.com/cowsay-org/cowsay.git).
 
 ## Install
 
-```
+```sh
 make install
 ```
 
 Installs to `/usr/local` by default. For another destination, invoke:
-```
+
+```sh
 make install prefix=</path/to/dir>
 ```
 
