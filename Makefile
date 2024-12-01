@@ -1,3 +1,20 @@
+# SPDX-FileCopyrightText: 2022 sudorook <daemon@nullcodon.com>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <https://www.gnu.org/licenses/>.
+
 # Makefile for Frogsay
 
 PACKAGE_TARNAME = frogsay
@@ -26,7 +43,7 @@ clean:
 #
 # The 'make man' target is intended for use at write time, not build time,
 # so it is not part of the normal build sequence, and its outputs are
-# checked in to the source tree. This is partially to simplify the build 
+# checked in to the source tree. This is partially to simplify the build
 # process, and partially to preserve the internal "update" timestamp inside
 # the man pages. We do this at build time to avoid introducing a dependency on
 # Asciidoc for users.
